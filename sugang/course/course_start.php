@@ -47,16 +47,16 @@ $selected_courses = $_SESSION['selected_courses'];
 </table>
 
 <script>
-// 시뮬레이션 시작: 09:59:30.000
+// 시뮬레이션 시작 시간: 09:59:30.000
 const simStart = new Date();
-simStart.setHours(9, 59, 30, 0);  // 기준 시뮬레이션 시작 시간
+simStart.setHours(9, 59, 30, 0);
 
-// 진짜 시간 기준으로 시뮬레이션 시간 생성
-const realStart = new Date(); // 페이지 로딩된 실제 시간
+// 페이지 로딩된 실제 시간
+const realStart = new Date();
 
 function getSimulatedTime() {
     const now = new Date();
-    const diff = now - realStart;  // 실제 경과 시간
+    const diff = now - realStart;  // 실제 경과 시간(ms)
     return new Date(simStart.getTime() + diff);
 }
 
@@ -74,7 +74,10 @@ function updateTime() {
 }
 setInterval(updateTime, 1);
 
-// 버튼 클릭 이벤트: 수강신청
+// 전체 과목 수
+const totalCourses = <?= count($selected_courses) ?>;
+let successCount = 0;
+
 document.querySelectorAll('.apply-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const courseCode = btn.dataset.code;
@@ -82,15 +85,15 @@ document.querySelectorAll('.apply-btn').forEach(btn => {
         const simTime = getSimulatedTime();
 
         const baseTime = new Date(simTime);
-        baseTime.setHours(10, 0, 0, 0);  // 기준시간 10:00:00.000
+        baseTime.setHours(10, 0, 0, 0);
 
-        const timeDiff = simTime - baseTime; // 밀리초 차이 (음수 가능)
+        const timeDiff = simTime - baseTime; // 밀리초 단위 (음수 가능)
 
         fetch('submit_course.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                courses: [ // key 이름을 "courses"로
+                courses: [
                     {
                         code: courseCode,
                         priority: priority,
@@ -103,12 +106,17 @@ document.querySelectorAll('.apply-btn').forEach(btn => {
         .then(data => {
             const row = document.getElementById('row-' + courseCode);
             const resultCell = row.querySelector('.result');
-
             const diffStr = (timeDiff >= 0 ? '+' : '') + timeDiff + 'ms';
 
             if (data.success) {
                 resultCell.textContent = `신청 성공 (지연: ${diffStr})`;
                 btn.disabled = true;
+
+                successCount++;
+                if (successCount === totalCourses) {
+                    alert('모든 수강신청이 완료되었습니다. 홈으로 이동합니다.');
+                    window.location.href = '/sugang/index.php'; // 홈 주소에 맞게 수정하세요
+                }
             } else {
                 resultCell.textContent = `실패: ${data.message} (지연: ${diffStr})`;
             }
