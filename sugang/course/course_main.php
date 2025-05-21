@@ -12,7 +12,7 @@ if (!isset($_SESSION['userID'])) {
 <p>원하는 작업을 선택하세요:</p>
 
 <div class="menu">
-    <a href="/sugang/course/course_apply.php">수강 신청</a>
+    <a href="/sugang/course/course_select.php">수강 신청</a>
     <a href="/sugang/course/course_view.php">수강 조회</a>
 </div>
 
