@@ -35,13 +35,6 @@ if (!$courses || !is_array($courses) || count($courses) === 0) {
 $con->begin_transaction();
 
 try {
-    // 기존 수강신청 내역 삭제 (사용자 학번 기준)
-    $del_sql = "DELETE FROM 수강신청 WHERE 학번 = ?";
-    $del_stmt = $con->prepare($del_sql);
-    $del_stmt->bind_param("i", $userID);
-    $del_stmt->execute();
-    $del_stmt->close();
-
     // 수강신청 정보 삽입
     $insert_sql = "INSERT INTO 수강신청 (학번, 강의코드, 시간차이, 중요도) VALUES (?, ?, ?, ?)";
     $insert_stmt = $con->prepare($insert_sql);

@@ -15,6 +15,21 @@ if (!isset($_SESSION['selected_courses']) || empty($_SESSION['selected_courses']
 
 $userID = $_SESSION['userID'];
 $selected_courses = $_SESSION['selected_courses'];
+
+// 각 강의코드에 대해 강의명, 교수명, 최대인원 추가 조회
+$course_details = [];
+$placeholders = implode(',', array_fill(0, count($selected_courses), '?'));
+$codes = array_column($selected_courses, 'course_code');
+
+$sql = "SELECT 강의코드, 강의명, 교수명, 최대인원 FROM 강의 WHERE 강의코드 IN ($placeholders)";
+$stmt = $con->prepare($sql);
+$stmt->bind_param(str_repeat('s', count($codes)), ...$codes);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $course_details[$row['강의코드']] = $row;
+}
+$stmt->close();
 ?>
 
 <h1>수강신청 시뮬레이션</h1>
@@ -25,26 +40,37 @@ $selected_courses = $_SESSION['selected_courses'];
     <thead>
         <tr>
             <th>강의코드</th>
+            <th>강의명</th>
+            <th>교수명</th>
+            <th>최대인원</th>
             <th>우선순위</th>
             <th>수강신청</th>
             <th>신청 결과</th>
         </tr>
     </thead>
     <tbody>
-    <?php foreach ($selected_courses as $course): ?>
-        <tr id="row-<?=htmlspecialchars($course['course_code'])?>">
-            <td><?=htmlspecialchars($course['course_code'])?></td>
-            <td><?=htmlspecialchars($course['priority'])?></td>
+    <?php foreach ($selected_courses as $course): 
+        $code = $course['course_code'];
+        $priority = $course['priority'];
+        $info = $course_details[$code] ?? ['강의명'=>'-', '교수명'=>'-', '최대인원'=>'-'];
+    ?>
+        <tr id="row-<?=htmlspecialchars($code)?>">
+            <td><?=htmlspecialchars($code)?></td>
+            <td><?=htmlspecialchars($info['강의명'])?></td>
+            <td><?=htmlspecialchars($info['교수명'])?></td>
+            <td><?=htmlspecialchars($info['최대인원'])?></td>
+            <td><?=htmlspecialchars($priority)?></td>
             <td>
                 <button class="apply-btn"
-                    data-code="<?=htmlspecialchars($course['course_code'])?>"
-                    data-priority="<?=htmlspecialchars($course['priority'])?>">수강신청</button>
+                    data-code="<?=htmlspecialchars($code)?>"
+                    data-priority="<?=htmlspecialchars($priority)?>">수강신청</button>
             </td>
             <td class="result"></td>
         </tr>
     <?php endforeach; ?>
     </tbody>
 </table>
+
 
 <script>
 // 시뮬레이션 시작 시간: 09:59:30.000
