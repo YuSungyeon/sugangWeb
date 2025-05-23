@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+?>
+<?php
 session_start();
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
@@ -35,6 +39,51 @@ $stmt->close();
 <h1>수강신청 시뮬레이션</h1>
 <p>수강신청 시간: <strong>10:00:00.000</strong></p>
 <p>현재 시간: <span id="current-time">--:--:--.---</span></p>
+
+<h2>기존 신청한 과목</h2>
+
+<?php
+// 사용자의 기존 수강신청 조회
+$sql = "
+    SELECT s.강의코드, c.강의명, c.교수명
+    FROM 수강신청 s
+    JOIN 강의 c ON s.강의코드 = c.강의코드
+    WHERE s.학번 = ?
+";
+$stmt = $con->prepare($sql);
+$stmt->bind_param("s", $userID);
+$stmt->execute();
+$result = $stmt->get_result();
+?>
+
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>강의코드</th>
+            <th>강의명</th>
+            <th>교수명</th>
+            <th>수강취소</th>
+            <th>취소 결과</th>
+        </tr>
+    </thead>
+    <tbody>
+    <?php while ($row = $result->fetch_assoc()): ?>
+        <tr id="applied-<?= htmlspecialchars($row['강의코드']) ?>">
+            <td><?= htmlspecialchars($row['강의코드']) ?></td>
+            <td><?= htmlspecialchars($row['강의명']) ?></td>
+            <td><?= htmlspecialchars($row['교수명']) ?></td>
+            <td>
+                <button class="cancel-btn" data-code="<?= htmlspecialchars($row['강의코드']) ?>">수강취소</button>
+            </td>
+            <td class="cancel-result"></td>
+        </tr>
+    <?php endwhile; ?>
+    </tbody>
+</table>
+<hr>
+
+
+<?php $stmt->close(); ?>
 
 <table border="1" cellpadding="5" cellspacing="0">
     <thead>
@@ -150,6 +199,37 @@ document.querySelectorAll('.apply-btn').forEach(btn => {
         .catch(() => alert('서버와 통신 실패'));
     });
 });
+
+document.querySelectorAll('.cancel-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const courseCode = btn.dataset.code;
+        if (!confirm(`${courseCode} 강의를 수강취소하시겠습니까?`)) return;
+
+        fetch('cancel_course.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: courseCode })
+        })
+        .then(res => res.json())
+        .then(data => {
+            const row = document.getElementById('applied-' + courseCode);
+            const resultCell = row.querySelector('.cancel-result');
+
+            if (data.success) {
+                resultCell.textContent = '취소 성공';
+            } else {
+                resultCell.textContent = '취소 실패: ' + data.message;
+            }
+        })
+        .catch(() => {
+            const row = document.getElementById('applied-' + courseCode);
+            const resultCell = row.querySelector('.cancel-result');
+            resultCell.textContent = '서버 오류';
+        });
+    });
+});
+
+
 </script>
 
 <?php require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/footer.php'; ?>

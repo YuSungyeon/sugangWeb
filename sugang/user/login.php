@@ -41,12 +41,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // 세션 하이재킹 방지를 위한 세션 ID 재생성 (보안 강화)
             session_regenerate_id(true);
 
-            // 관리자라면 관리자 페이지로 이동, 일반 사용자는 메인 페이지로 이동
-            if ($_SESSION['is_admin']) {
-                header("Location: /sugang/admin/dashboard.php");
-            } else {
-                header("Location: /sugang/index.php");
-            }
+            // 로그인 후 메인 페이지로 이동
+            header("Location: /sugang");
+            
             exit(); // 리디렉션 후 코드 중단
         } else {
             // 비밀번호 불일치

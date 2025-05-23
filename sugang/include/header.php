@@ -11,14 +11,11 @@ if (session_status() == PHP_SESSION_NONE) {
     <meta charset="UTF-8">
     <title>수강신청 시스템</title>
     
-    <!-- 공통 CSS 링크 -->
     <link rel="stylesheet" href="/sugang/assets/css/style.css">
-
-    <!-- 공통 JS가 필요하다면 여기에 추가 -->
 </head>
 <body>
     <header>
-        <h1><a href="/sugang/index.php">수강신청 시스템</a></h1>
+        <h1><a href="/sugang">수강신청 시스템</a></h1>
         
         <!-- 상단 네비게이션 -->
         <nav>

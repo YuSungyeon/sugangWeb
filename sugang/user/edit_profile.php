@@ -36,6 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // 쿼리 실행
     if ($stmt->execute()) {
+        $_SESSION['name'] = $new_name;
         echo "<script>alert('정보가 수정되었습니다.'); location.href='/sugang/user/mypage.php';</script>";
     } else {
         echo "수정 실패: " . $stmt->error;

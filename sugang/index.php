@@ -10,12 +10,12 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
     <h2>환영합니다!</h2>
     <?php if (isset($_SESSION['userID'])): ?>
         <!-- 로그인 상태일 때 보여줄 내용 -->
-        <p><strong><?= htmlspecialchars($_SESSION['name']) ?></strong>님, 안녕하세요 👋</p>
+        <p><strong><?= htmlspecialchars($_SESSION['name']) ?></strong>님, 안녕하세요</p>
         <p><a href="/sugang/user/mypage.php">마이페이지</a> | <a href="/sugang/user/logout.php">로그아웃</a></p>
 
         <?php if (isset($_SESSION['is_admin']) && $_SESSION['is_admin']): ?>
             <!-- 관리자일 경우 관리자 페이지 링크 -->
-            <p><a href="/sugang/admin/dashboard.php">[관리자 페이지 바로가기]</a></p>
+            <p><a href="/sugang/admin">[관리자 페이지 바로가기]</a></p>
         <?php endif; ?>
 
     <?php else: ?>

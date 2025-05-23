@@ -29,34 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         if (password_verify($inputPassword, $hashedPassword)) {
 
-            // 2. 외래키 제약 조건을 위반하지 않도록 관련 테이블 데이터 먼저 삭제
-
-            // 2-1. 수강신청 테이블에서 삭제
-            $deleteSugang = $con->prepare("DELETE FROM 수강신청 WHERE 학번 = ?");
-            $deleteSugang->bind_param("s", $userID);
-            if (!$deleteSugang->execute()) {
-                echo "<script>alert('수강신청 정보 삭제 중 오류 발생'); history.back();</script>";
-                exit;
-            }
-            $deleteSugang->close();
-
-            // 2-2. 댓글 테이블에서 삭제
-            $deleteComments = $con->prepare("DELETE FROM 댓글 WHERE 작성자 = ?");
-            $deleteComments->bind_param("s", $userID);
-            if (!$deleteComments->execute()) {
-                echo "<script>alert('댓글 삭제 중 오류 발생'); history.back();</script>";
-                exit;
-            }
-            $deleteComments->close();
-
-            // 2-3. 게시글 테이블에서 삭제
-            $deletePosts = $con->prepare("DELETE FROM 게시글 WHERE 작성자 = ?");
-            $deletePosts->bind_param("s", $userID);
-            if (!$deletePosts->execute()) {
-                echo "<script>alert('게시글 삭제 중 오류 발생'); history.back();</script>";
-                exit;
-            }
-            $deletePosts->close();
+            // 2. 외래키 제약 조건을 위반하지 않도록 관련 테이블 데이터 먼저 삭제 (ON DELETE CASCADE 처리 해둠)
 
             // 3. 사용자 계정 삭제
             $deleteUser = $con->prepare("DELETE FROM 사용자 WHERE 학번 = ?");
