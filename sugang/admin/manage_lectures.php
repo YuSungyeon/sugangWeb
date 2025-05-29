@@ -15,7 +15,7 @@ $result = $con->query($sql);
         <th>강의코드</th>
         <th>강의명</th>
         <th>담당 교수</th>
-        <th>학점</th>
+        <th>최대인원</th>
         <th>수정</th>
         <th>삭제</th>
     </tr>

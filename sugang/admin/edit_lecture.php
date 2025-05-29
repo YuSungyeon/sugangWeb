@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $교수명 = trim($_POST['교수명']);
     $최대인원 = intval($_POST['최대인원']);
 
-    if ($강의명 === '' || $교수명 === '' || $최대인원 <= 0) {
+    if ($최대인원 <= 0) {
         $error = "모든 항목을 올바르게 입력해주세요.";
     } else {
         $stmt = $con->prepare("UPDATE 강의 SET 강의명 = ?, 교수명 = ?, 최대인원 = ? WHERE 강의코드 = ?");
@@ -56,8 +56,8 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
 
 <form action="edit_lecture.php?code=<?= urlencode($code) ?>" method="post">
     <p>강의코드: <?= htmlspecialchars($lecture['강의코드']) ?></p>
-    <label>강의명: <input type="text" name="강의명" value="<?= htmlspecialchars($lecture['강의명']) ?>" required></label><br><br>
-    <label>담당 교수: <input type="text" name="교수명" value="<?= htmlspecialchars($lecture['교수명']) ?>" required></label><br><br>
+    <label>강의명: <input type="text" name="강의명" value="<?= htmlspecialchars($lecture['강의명']) ?>"></label><br><br>
+    <label>담당 교수: <input type="text" name="교수명" value="<?= htmlspecialchars($lecture['교수명']) ?>"></label><br><br>
     <label>최대인원: <input type="number" name="최대인원" min="1" max="300" value="<?= htmlspecialchars($lecture['최대인원']) ?>" required></label><br><br>
     <button type="submit">수정</button>
 </form>

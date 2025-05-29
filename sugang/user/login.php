@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // 세션에 사용자 정보 저장
             $_SESSION['userID'] = $row['학번'];      // 학번
-            $_SESSION['name'] = $row['이름'];            // 이름
+            $_SESSION['name'] = $row['이름'];        // 이름
             $_SESSION['is_admin'] = (isset($row['관리자여부']) && $row['관리자여부'] == 1);
 
 
