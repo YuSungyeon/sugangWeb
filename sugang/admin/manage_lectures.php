@@ -5,10 +5,10 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
 
 // 보여줄 개수 옵션과 기본값
 $limit_options = [10, 15, 20];
-$limit = isset($_GET['limit']) && in_array(intval($_GET['limit']), $limit_options) ? intval($_GET['limit']) : 10;
+$limit = (isset($_GET['limit']) && in_array(intval($_GET['limit']), $limit_options)) ? intval($_GET['limit']) : 10;
 
 // 현재 페이지 (1부터 시작)
-$page = isset($_GET['page']) && is_numeric($_GET['page']) && $_GET['page'] > 0 ? intval($_GET['page']) : 1;
+$page = (isset($_GET['page']) && is_numeric($_GET['page']) && $_GET['page'] > 0 ) ? intval($_GET['page']) : 1;
 
 // 검색 필드와 키워드
 $search_fields = ['강의명', '교수명', '강의코드'];

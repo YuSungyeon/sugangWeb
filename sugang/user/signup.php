@@ -10,20 +10,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = trim($_POST['password']);
     $name = trim($_POST['name']);
 
-    // 빈 값이 있는지 유효성 검사
-    if ($student_id == "" || $password == "" || $name == "") {
-        echo "모든 항목을 입력해주세요.<br>";
-        echo "<a href='/sugang/user/signup.php'>돌아가기</a>";
-        exit();  // 처리 중단
+    /* ② 기본 빈값 검사 */
+    if ($student_id === '' || $password === '' || $name === '') {
+        exit("모든 항목을 입력해주세요.<br><a href='/sugang/user/signup.php'>돌아가기</a>");
+    }
+
+    /* ③ 학번 형식 검증 */
+    if (!preg_match('/^\d{8}$/', $student_id)) {               // 8자리 숫자
+        exit("학번은 숫자 8자리여야 합니다.<br><a href='/sugang/user/signup.php'>돌아가기</a>");
+    }
+
+    $yearPart     = intval(substr($student_id, 0, 4));         // 앞 4자리
+    $currentYear  = intval(date('Y'));
+    if ($yearPart < 1900 || $yearPart > $currentYear) {        // 1900~현재년도
+        exit("학번의 앞 4자리는 1900~{$currentYear} 사이여야 합니다.<br><a href='/sugang/user/signup.php'>돌아가기</a>");
     }
     
     // 동일한 학번이 이미 등록되어 있는지 확인
     $check_sql = "SELECT * FROM 사용자 WHERE 학번 = '".$student_id."'";
     $check_result = mysqli_query($con, $check_sql);
     if ($check_result && mysqli_num_rows($check_result) > 0) {
-        echo "이미 등록된 학번입니다.<br>";
-        echo "<a href='/sugang/user/signup.php'>돌아가기</a>";
-        exit();
+        exit("이미 등록된 학번입니다.<br><a href='/sugang/user/signup.php'>돌아가기</a>");
     }
 
     // 비밀번호 보안을 위해 해싱 (password_hash는 PHP에서 추천하는 안전한 방식)
@@ -61,9 +68,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     <!-- 회원가입 폼 -->
     <form method="post" action="/sugang/user/signup.php">
-        학번: <input type="text" name="student_id" required><br>
-        비밀번호: <input type="password" name="password" required><br>
-        이름: <input type="text" name="name" required><br>
+        학번: <input type="text" name="student_id" maxlength="8" required><br>
+        비밀번호: <input type="password" name="password" maxlength="70" required><br>
+        이름: <input type="text" name="name" maxlength="30" required><br>
         <input type="submit" value="회원가입">
     </form>
     

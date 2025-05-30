@@ -32,7 +32,7 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
         <th>강의코드</th>
         <th>강의명</th>
         <th>교수명</th>
-        <th>시간차이</th>
+        <th>시간차이(초)</th>
     </tr>
 
     <?php while ($row = $result->fetch_assoc()): ?>
@@ -40,7 +40,14 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
         <td><?= htmlspecialchars($row['강의코드']) ?></td>
         <td><?= htmlspecialchars($row['강의명']) ?></td>
         <td><?= htmlspecialchars($row['교수명']) ?></td>
-        <td><?= htmlspecialchars($row['시간차이']) ?></td>
+        <td>
+        <?= ROUND(abs($row['시간차이'])/1000,5) ?>
+        <?php if ($row['시간차이'] < 0): ?>
+            <span style="color: red;">(전)</span>
+        <?php else: ?>
+            <span style="color: blue;">(후)</span>
+        <?php endif; ?>
+        </td>
     </tr>
     <?php endwhile; ?>
 
