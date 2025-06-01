@@ -39,6 +39,12 @@ $con->close();
 <p><strong>이름:</strong> <?php echo htmlspecialchars($name); ?></p>
 
 <br>
+<ul>
+  <li><a href="/sugang/course/mycourses.php">나의 수강내역</a></li>
+  <li><a href="/sugang/stats/stats_solo.php">수강신청 보고서</a></li>
+  <li><a href="/sugang/board/my_board.php">내가 쓴 글</a></li>
+</ul>
+<br>
 <a href="/sugang/user/edit_profile.php">회원정보 수정</a> |
 <a href="/sugang/user/logout.php">로그아웃</a> |
 <a href="/sugang/user/delete_account.php" onclick="return confirm('정말 탈퇴하시겠습니까?');" style="color:red;">회원 탈퇴</a> |

@@ -22,7 +22,7 @@ if (session_status() == PHP_SESSION_NONE) {
             <ul>
                 <?php if (isset($_SESSION['userID'])): ?>
                     <li><a href="/sugang/user/mypage.php">마이페이지</a></li>
-                    <li><a href="/sugang/course/mycourses.php">나의 수강내역</a></li>
+                    <li><a href="/sugang/course/course_main.php">수강신청</a></li>
                     <li><a href="/sugang/board/board_list.php">게시판</a></li>
                     
                     <?php if (!empty($_SESSION['is_Admin']) && $_SESSION['is_Admin']): ?>

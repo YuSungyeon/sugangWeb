@@ -90,93 +90,60 @@ $stmt->execute(); $applied=$stmt->get_result();
 const simStart = new Date();            // 09:59:30.000부터 시작
 simStart.setHours(9,59,30,0);
 const realStart = new Date();
-
-function simNow() {
-  return new Date(simStart.getTime() + (Date.now() - realStart));
-}
-
+function simNow(){return new Date(simStart.getTime()+(Date.now()-realStart));}
 function updateClock(){
-  const t = simNow();
+  const t=simNow();
   const p=n=>String(n).padStart(2,'0');
-  document.getElementById('current-time').textContent =
-    `${p(t.getHours())}:${p(t.getMinutes())}:${p(t.getSeconds())}.${String(t.getMilliseconds()).padStart(3,'0')}`;
+  document.getElementById('current-time').textContent=`${p(t.getHours())}:${p(t.getMinutes())}:${p(t.getSeconds())}.${String(t.getMilliseconds()).padStart(3,'0')}`;
 }
 setInterval(updateClock,1);
 
 /* ────────── DOM 캐시 ────────── */
-const plannedBody = document.getElementById('plannedBody');
-const appliedBody = document.getElementById('appliedBody');
+const plannedBody=document.getElementById('plannedBody');
+const appliedBody=document.getElementById('appliedBody');
 
 /* ────────── 수강취소 ────────── */
 function cancelHandler(){
   const code=this.dataset.code;
   if(!confirm(`${code} 강의를 취소하시겠습니까?`)) return;
-  fetch('cancel_course.php',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({code})
-  })
-  .then(r=>r.json())
-  .then(d=> d.success
-        ? (appliedBody.removeChild(document.getElementById('applied-'+code)),
-           alert('취소가 완료되었습니다.'))
-        : alert('취소 실패: '+d.msg))
-  .catch(()=>alert('서버 오류로 취소 실패'));
+  fetch('cancel_course.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})})
+   .then(r=>r.json())
+   .then(d=>d.success?(appliedBody.removeChild(document.getElementById('applied-'+code)),alert('취소가 완료되었습니다.')):alert('취소 실패: '+d.msg))
+   .catch(()=>alert('서버 오류로 취소 실패'));
 }
-document.querySelectorAll('.cancel-btn').forEach(b=>b.addEventListener('click',cancelHandler));
+document.querySelectorAll('.cancel-btn').forEach(btn=>btn.addEventListener('click',cancelHandler));
 
 /* ────────── 수강신청 ────────── */
-let nextPriority = 1;
-
 document.querySelectorAll('.apply-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const code = btn.dataset.code;
-    const priority = nextPriority;
+  btn.addEventListener('click',()=>{
+    const code=btn.dataset.code;
+    const now=simNow();
+    const base=new Date(now);base.setHours(10,0,0,0);
+    const diff=now-base; // ms (+/-)
 
-    /* ① 현재 가상 시각과 ② 가상 기준 10:00 계산 */
-    const now   = simNow();
-    const base  = new Date(now);
-    base.setHours(10,0,0,0);
-    const diff  = now - base;                 // ms (+/-)
-
-    fetch('submit_course.php',{
-      method :'POST',
-      headers:{'Content-Type':'application/json'},
-      body   :JSON.stringify({courses:[{code,priority,time_diff:diff}]})
-    })
-    .then(r=>r.json())
-    .then(d=>{
-      if(!d.success){ alert('신청 실패: '+d.msg); return; }
-
-      /* 성공 시 행 이동 */
-      const old = document.getElementById('row-'+code);
-      plannedBody.removeChild(old);
-      const tr = document.createElement('tr');
-      tr.id='applied-'+code;
-      tr.innerHTML=`
-         <td>${code}</td>
-         <td>${old.children[1].textContent}</td>
-         <td>${old.children[2].textContent}</td>
-         <td><button class="cancel-btn" data-code="${code}">수강취소</button></td>`;
-      appliedBody.appendChild(tr);
-      tr.querySelector('.cancel-btn').addEventListener('click',cancelHandler);
-      nextPriority++;
-    })
-    .catch(()=>alert('서버 오류로 신청 실패'));
+    fetch('submit_course.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({courses:[{code,time_diff:diff}]})})
+      .then(r=>r.json())
+      .then(d=>{
+        if(!d.success){alert('신청 실패: '+d.msg);return;}
+        const old=document.getElementById('row-'+code);
+        plannedBody.removeChild(old);
+        const tr=document.createElement('tr');
+        tr.id='applied-'+code;
+        tr.innerHTML=`<td>${code}</td><td>${old.children[1].textContent}</td><td>${old.children[2].textContent}</td><td><button class=\"cancel-btn\" data-code=\"${code}\">수강취소</button></td>`;
+        appliedBody.appendChild(tr);
+        tr.querySelector('.cancel-btn').addEventListener('click',cancelHandler);
+      })
+      .catch(()=>alert('서버 오류로 신청 실패'));
   });
 });
 
 /* ────────── 종료 버튼 ────────── */
 document.getElementById('finish-btn').addEventListener('click',()=>{
-  if(!confirm('수강신청을 종료하시겠습니까?')) return;
-  fetch('',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'finish'})
-  })
-  .then(r=>r.json())
-  .then(d=> d.success
-        ? (alert('수강신청이 종료되었습니다.'), location.href='/sugang/index.php')
-        : alert('종료 처리 실패'))
-  .catch(()=>alert('서버 오류로 종료 실패'));
+  if(!confirm('수강신청을 종료하시겠습니까?'))return;
+  fetch('',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'finish'})})
+   .then(r=>r.json())
+   .then(d=>d.success?(alert('수강신청이 종료되었습니다.'),location.href='/sugang/stats/stats_solo.php'):alert('종료 처리 실패'))
+   .catch(()=>alert('서버 오류로 종료 실패'));
 });
 </script>
 

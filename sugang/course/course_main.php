@@ -11,9 +11,10 @@ if (!isset($_SESSION['userID'])) {
 <h2>안녕하세요, <?php echo htmlspecialchars($_SESSION['name']); ?>님!</h2>
 <p>원하는 작업을 선택하세요:</p>
 
-<div class="menu">
-    <a href="/sugang/course/course_select.php">수강 신청</a>
-    <a href="/sugang/course/mycourses.php">수강 조회</a>
-</div>
+<ul>
+  <li><a href="/sugang/course/course_select.php">수강 신청</a></li>
+  <li><a href="/sugang/course/mycourses.php">수강 조회</a></li>
+  <li><a href="/sugang/stats/stats_total.php">수강신청 통계</a></li>
+</ul>
 
 <?php require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/footer.php'; ?>
