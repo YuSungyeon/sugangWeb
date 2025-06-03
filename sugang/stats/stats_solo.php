@@ -26,6 +26,11 @@ $stmt->execute();
 $profile = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
+if (!$profile || $profile['total_cnt'] == 0) {
+    echo "<script>alert('수강 신청 정보가 없습니다.'); history.back();</script>";
+    exit;
+}
+
 /* ── 3. 과목별 내 신청 정보 + 강의 최대인원 ── */
 $sqlDtl = "
  SELECT sc.강의코드, k.강의명, k.교수명, k.최대인원,
@@ -95,7 +100,7 @@ $courseMsgs = [];
 $hasEarly = false;    // 클릭 시간 음수 존재 여부
 while($row = $details->fetch_assoc()){
     $code     = $row['강의코드'];
-    $title    = $row['강의명'];
+    $title    = $row['강의명'].'('.$row['교수명'].')';
     $myRank   = $myRanks[$code];
     $maxCap   = $row['최대인원'];
     $ratio    = $myRank / $maxCap;
@@ -106,7 +111,7 @@ while($row = $details->fetch_assoc()){
     elseif ($ratio <= 1.0)       $safe = '위험';
     else                         $safe = '매우 위험';
 
-    $courseMsgs[] = "'".htmlspecialchars($title)."' 과목 신청 속도는 {$safe}합니다.";
+    $courseMsgs[] = "<strong>'".htmlspecialchars($title)."'</strong> 과목 신청 속도는 <strong>{$safe}</strong>합니다.";
 
     if ($row['click_diff'] < 0) $hasEarly = true;
 

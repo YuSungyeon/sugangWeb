@@ -21,7 +21,6 @@ $result = $stmt->get_result();
 // 결과에서 사용자 정보 추출
 if ($row = $result->fetch_assoc()) {
     $name = $row['이름'];
-    $regDate = $row['가입일']; // 가입일이라는 컬럼이 있다고 가정
 } else {
     echo "사용자 정보를 불러올 수 없습니다.";
     exit;

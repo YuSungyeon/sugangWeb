@@ -1,4 +1,10 @@
 <?php
+/* ── 0. 디버그 ── */
+ini_set('display_errors',1);
+ini_set('display_startup_errors',1);
+error_reporting(E_ALL);
+mysqli_report(MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT);
+
 session_start();
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
 
@@ -8,7 +14,8 @@ if (!isset($_GET['id'])) {
 }
 
 $id = intval($_GET['id']);
-$sql = "SELECT 게시글.제목, 게시글.내용, 게시글.작성시간, 게시글.수정시간, 사용자.학번, 사용자.이름 AS 작성자
+$sql = "SELECT 게시글.제목, 게시글.내용, 게시글.작성시간, 게시글.상태,
+            게시글.수정시간, 사용자.학번, 사용자.이름 AS 작성자
         FROM 게시글
         JOIN 사용자 ON 게시글.작성자 = 사용자.학번
         WHERE 게시글.게시글ID = ?";
@@ -23,6 +30,10 @@ if ($result->num_rows == 0) {
 }
 
 $row = $result->fetch_assoc();
+if (!$row['상태']) {
+    echo "<script>alert('관리자에 의해 삭제된 게시글입니다.'); history.back();</script>";
+    exit;
+}
 
 include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
 ?>
@@ -39,16 +50,22 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
 
 <p>
 <?php if ($row['학번'] == $_SESSION['userID']): ?>
-    <a href="board_edit.php?id=<?= $id ?>">✏️ 수정</a> | 
+    <a href="board_edit.php?id=<?= $id ?>">✏️ 수정</a> |
+    <a href="board_delete.php?id=<?= $id ?>" onclick="return confirm('정말 삭제하시겠습니까?');">🗑 삭제</a> 
 <?php endif; ?>
-<?php if ($row['학번'] == $_SESSION['userID'] || $_SESSION['is_admin']): ?>
-    <a href="board_delete.php?id=<?= $id ?>" onclick="return confirm('정말 삭제하시겠습니까?');">🗑 삭제</a>
+<?php if ($_SESSION['is_admin']): ?>
+    <form action="/sugang/admin/board_toggle.php" method="post" style="display:inline;">
+        <input type="hidden" name="id" value="<?= $id ?>">
+        <button type="submit">
+            <?= $row['상태'] ? '삭제' : '복구' ?>
+        </button>
+    </form>
 <?php endif; ?>
 </p>
 
 <?php
 // 댓글 조회
-$sql = "SELECT 댓글.댓글ID, 댓글.내용, 댓글.작성시간, 댓글.수정시간, 사용자.학번, 사용자.이름 AS 작성자
+$sql = "SELECT 댓글.댓글ID, 댓글.내용, 댓글.작성시간, 댓글.수정시간, 댓글.상태, 사용자.학번, 사용자.이름 AS 작성자
         FROM 댓글
         JOIN 사용자 ON 댓글.작성자 = 사용자.학번
         WHERE 댓글.게시글ID = ?
@@ -82,12 +99,25 @@ $comments = $stmt->get_result();
                 <?php if (!empty($comment['수정시간'])): ?>
                     <small style="color:gray;">(수정됨: <?= htmlspecialchars($comment['수정시간']) ?>)</small><br>
                 <?php endif; ?>
-                <?= nl2br(htmlspecialchars($comment['내용'])) ?>&nbsp
-                <?php if ($comment['학번'] == $_SESSION['userID']): ?>
-                    <a href="/sugang/comment/edit_comment.php?id=<?= $comment['댓글ID'] ?>&post=<?= $id ?>">✏️ 수정</a> | 
+                <?php if ((int)$comment['상태'] === 0): ?>
+                    <em style="color:gray;">관리자에 의해 삭제된 댓글입니다.</em>
+                <?php else: ?>
+                    <?= nl2br(htmlspecialchars($comment['내용'])) ?>&nbsp
                 <?php endif; ?>
-                <?php if ($comment['학번'] == $_SESSION['userID'] || $_SESSION['is_admin']): ?>
+
+                <?php if ($comment['학번'] == $_SESSION['userID'] && (int)$comment['상태'] !== 0): ?>
+                    <a href="/sugang/comment/edit_comment.php?id=<?= $comment['댓글ID'] ?>&post=<?= $id ?>">✏️ 수정</a> | 
                     <a href="/sugang/comment/delete_comment.php?id=<?= $comment['댓글ID'] ?>&post=<?= $id ?>" onclick="return confirm('정말 삭제하시겠습니까?');">🗑 삭제</a>
+                <?php endif; ?>
+
+                <?php if ($_SESSION['is_admin']): ?>
+                    <form action="/sugang/admin/comment_toggle.php" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="<?= $comment['댓글ID'] ?>">
+                        <input type="hidden" name="post" value="<?= $id ?>">  <!-- 게시글 ID -->
+                        <button type="submit">
+                            <?= ((int)$comment['상태']) ? '삭제' : '복구' ?>
+                        </button>
+                    </form>
                 <?php endif; ?>
             </li>
             <hr>

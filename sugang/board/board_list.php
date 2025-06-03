@@ -2,10 +2,19 @@
 session_start();
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
 
-$sql = "SELECT 게시글.게시글ID, 게시글.제목, 사용자.이름 AS 작성자, 게시글.작성시간
+// 게시글 + 작성자 + 댓글 수 조인
+$sql = "
+SELECT 
+    게시글.게시글ID, 
+    게시글.제목, 
+    사용자.이름 AS 작성자, 
+    게시글.작성시간,
+    (SELECT COUNT(*) FROM 댓글 WHERE 댓글.게시글ID = 게시글.게시글ID) AS 댓글수
 FROM 게시글
 JOIN 사용자 ON 게시글.작성자 = 사용자.학번
-ORDER BY 게시글.게시글ID DESC";
+WHERE 게시글.상태 = TRUE
+ORDER BY 게시글.게시글ID DESC
+";
 
 $result = $con->query($sql);
 
@@ -18,13 +27,19 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
     <tr>
         <th>번호</th>
         <th>제목</th>
+        <th>댓글</th>
         <th>작성자</th>
         <th>작성일</th>
     </tr>
     <?php while ($row = $result->fetch_assoc()): ?>
     <tr>
         <td><?= htmlspecialchars($row['게시글ID']) ?></td>
-        <td><a href="/sugang/board/board_view.php?id=<?= $row['게시글ID'] ?>"><?= htmlspecialchars($row['제목']) ?></a></td>
+        <td>
+            <a href="/sugang/board/board_view.php?id=<?= $row['게시글ID'] ?>">
+                <?= htmlspecialchars($row['제목']) ?>
+            </a>
+        </td>
+        <td><?= (int)$row['댓글수'] ?></td>
         <td><?= htmlspecialchars($row['작성자']) ?></td>
         <td><?= htmlspecialchars($row['작성시간']) ?></td>
     </tr>
@@ -32,7 +47,7 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
 
     <?php if ($result->num_rows === 0): ?>
     <tr>
-        <td colspan="4">게시글이 없습니다.</td>
+        <td colspan="5">게시글이 없습니다.</td>
     </tr>
     <?php endif; ?>
 </table>

@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt->bind_param("ssi", $title, $content, $id);
 
     if ($stmt->execute()) {
-        echo "<script>alert('수정되었습니다.'); location.href='board_view.php?id=$id';</script>";
+        echo "<script>location.href='board_view.php?id=$id';</script>";
     } else {
         echo "수정 실패: " . $stmt->error;
     }

@@ -140,7 +140,8 @@ $stmt2->execute(); $result2 = $stmt2->get_result();
 </div>
 
 <!-- 2. 학번별 통계 -->
-<h2>2. 학번별 수강신청 통계 (최근 7년)</h2>
+<h2>2. 학번별 수강신청 통계</h2>
+<h4>(최대 최근 7년)</h4>
 <table>
  <tr><th>입학년도</th><th>수강신청 인원 수</th><th>평균 클릭 시간(s)</th></tr>
  <?php if($result2->num_rows==0): ?>

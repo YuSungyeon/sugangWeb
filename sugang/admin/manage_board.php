@@ -1,4 +1,10 @@
 <?php
+/* ─────────── 0. 디버그 출력 ─────────── */
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 /* ─────────────────── 관리자 권한 & DB ─────────────────── */
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/admin/include/admin_check.php';
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
@@ -25,7 +31,7 @@ if ($toDate  !==''){ $where[]='DATE(게시글.작성시간)<=?'; $params[]=$toDa
 
 $sql = "
   SELECT 게시글.게시글ID, 게시글.제목, 게시글.작성시간,
-         사용자.이름 AS 작성자
+         게시글.상태, 사용자.이름 AS 작성자
     FROM 게시글
     JOIN 사용자 ON 게시글.작성자 = 사용자.학번
 ";
@@ -63,7 +69,7 @@ if ($where) {
 
 <table border="1" cellpadding="5">
  <tr>
-   <th>번호</th><th>제목</th><th>작성자</th><th>작성일</th><th>관리</th>
+   <th>번호</th><th>제목</th><th>작성자</th><th>작성일</th><th>관리</th><th>상태</th>
  </tr>
 <?php while($row=$result->fetch_assoc()): ?>
  <tr>
@@ -72,12 +78,14 @@ if ($where) {
    <td><?=htmlspecialchars($row['작성자'])?></td>
    <td><?=htmlspecialchars($row['작성시간'])?></td>
    <td>
-     <form action="board_delete.php" method="post"
-           style="display:inline;"
-           onsubmit="return confirm('정말 삭제하시겠습니까?');">
+     <form action="board_toggle.php" method="post"
+           style="display:inline;">
        <input type="hidden" name="id" value="<?=$row['게시글ID']?>">
-       <button type="submit">🗑 삭제</button>
+       <button type="submit"><?=$row['상태'] ? '삭제' : '복구'?></button>
      </form>
+   </td>
+   <td style="color: <?= $row['상태'] ? 'green' : 'red' ?>;">
+    <?= $row['상태'] ? '게시' : '삭제' ?>
    </td>
  </tr>
 <?php endwhile;?>
