@@ -1,12 +1,10 @@
 <?php
 session_start();
-if (!isset($_SESSION['userID'])) {
-    header("Location: /sugang/user/login.php");
-    exit();
-}
-?>
 
-<?php require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php'; ?>
+// 로그인 상태 확인 & 헤더
+require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/check_login.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php'; 
+?>
 
 <h2>안녕하세요, <?php echo htmlspecialchars($_SESSION['name']); ?>님!</h2>
 <p>원하는 작업을 선택하세요:</p>

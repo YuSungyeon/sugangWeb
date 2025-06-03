@@ -1,4 +1,5 @@
 <?php
+// 데이터베이스 연결 설정 & 관리자 로그인 상태 확인
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/admin/include/admin_check.php';
 
@@ -24,7 +25,7 @@ if ($result->num_rows === 0) {
     die('해당 사용자가 존재하지 않습니다.');
 }
 
-// 사용자 삭제
+// 사용자 삭제 진행
 $stmt = $con->prepare("DELETE FROM 사용자 WHERE 학번 = ?");
 $stmt->bind_param("i", $학번);
 

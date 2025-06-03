@@ -1,23 +1,23 @@
 <?php
 session_start();
-require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
 
-if (!isset($_SESSION['userID'])) {
-    echo "<script>alert('로그인이 필요합니다.'); location.href='/sugang/user/login.php';</script>";
-    exit;
-}
+// 데이터베이스 연결 설정 & 로그인 상태 확인
+require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/check_login.php';
 
 $userID = $_SESSION['userID'];
 
+// 폼이 제출된 경우
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $inputPassword = trim($_POST['password']);
 
+    // 입력 공백 확인
     if ($inputPassword === "") {
         echo "<script>alert('비밀번호를 입력해주세요.'); history.back();</script>";
         exit;
     }
 
-    // 1. DB에서 현재 비밀번호 가져오기
+    // DB에서 현재 비밀번호 가져오기
     $sql = "SELECT 비밀번호 FROM 사용자 WHERE 학번 = ?";
     $stmt = $con->prepare($sql);
     $stmt->bind_param("s", $userID);
@@ -29,9 +29,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         if (password_verify($inputPassword, $hashedPassword)) {
 
-            // 2. 외래키 제약 조건을 위반하지 않도록 관련 테이블 데이터 먼저 삭제 (ON DELETE CASCADE 처리 해둠)
+            // 외래키 제약 조건을 위반하지 않도록 관련 테이블 데이터 먼저 삭제하는 것은 패스 (ON DELETE CASCADE 처리 해둠)
 
-            // 3. 사용자 계정 삭제
+            // 사용자 계정 삭제
             $deleteUser = $con->prepare("DELETE FROM 사용자 WHERE 학번 = ?");
             $deleteUser->bind_param("s", $userID);
 

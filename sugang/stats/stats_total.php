@@ -1,24 +1,25 @@
 <?php
-/* ─────────── 0. 디버그 출력 ─────────── */
+/* ─────────── 디버그 출력 ─────────── */
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+/* ──────────────────────────────── */
 
-/* ─────────── 1. DB 연결 ─────────── */
+// 데이터베이스 연결 설정
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
 
-/* ─────────── 2. 파라미터 ─────────── */
+// 세부 설정 조건들 
 $perPage = 10;
 $page    = max(1, intval($_GET['page'] ?? 1));
 $offset  = ($page - 1) * $perPage;
-$keyword = trim($_GET['lecture'] ?? '');               // 강의명 or 교수명
+$keyword = trim($_GET['lecture'] ?? '');  // 검색 필터 : 강의명 or 교수명
 
-/* ─────────── 3. WHERE 절 ─────────── */
 $where  = '';
 $types  = '';
 $params = [];
 
+// 검색 필터 적용 (동일한 키워드로 강의명, 교수명에 적용)
 if ($keyword !== '') {
     $where  = ' WHERE (강의.강의명 LIKE ? OR 강의.교수명 LIKE ?) ';
     $like   = '%'.$keyword.'%';
@@ -26,25 +27,31 @@ if ($keyword !== '') {
     $types  = 'ss';
 }
 
-/* ─────────── 4-A. 총 행 수 ─────────── */
+// 전체 결과 수 계산: 중복되지 않는 강의코드 기준으로 COUNT
+/* ─────────────────────────────────── */
 $sqlCnt = "
   SELECT COUNT(DISTINCT 수강신청.강의코드) AS cnt
     FROM 수강신청
     JOIN 강의 ON 수강신청.강의코드 = 강의.강의코드
     $where";
+
+// 조건이 있는 경우 바인딩
 $stmtCnt = $con->prepare($sqlCnt);
 if ($params) $stmtCnt->bind_param($types, ...$params);
+
 $stmtCnt->execute();
 $totalRows  = $stmtCnt->get_result()->fetch_assoc()['cnt'] ?? 0;
 $totalPages = max(1, ceil($totalRows / $perPage));
 $stmtCnt->close();
+/* ─────────────────────────────────── */
 
-/* ─────────── 4-B. 실제 강의별 통계 ─────────── */
+// 실제 강의별 통계
+/* ─────────────────────────────────── */
 $sqlData = "
   SELECT  강의.강의명,
           강의.교수명,
-          COUNT(*)                    AS 신청인원,
-          ROUND(AVG(중요도),1)        AS 평균우선순위,
+          COUNT(*) AS 신청인원,
+          ROUND(AVG(중요도),1) AS 평균우선순위,
           ROUND(AVG(시간차이)/1000,5) AS 평균클릭차이
     FROM 수강신청
     JOIN 강의 ON 수강신청.강의코드 = 강의.강의코드
@@ -57,8 +64,10 @@ $stmt1 = $con->prepare($sqlData);
 if ($params) $stmt1->bind_param($types, ...$params);
 $stmt1->execute();
 $result1 = $stmt1->get_result();
+/* ─────────────────────────────────── */
 
-/* ─────────── 5. 학번별 통계 (최근 7년) ─────────── */
+// 학번별 통계 (최근 7년)
+/* ─────────────────────────────────── */
 $curY = date('Y'); $startY = $curY - 6;
 $sql2 = "
   SELECT SUBSTRING(학번,1,4) AS 입학년도,
@@ -72,8 +81,11 @@ GROUP BY 입학년도
 ORDER BY 입학년도 DESC";
 $stmt2 = $con->prepare($sql2);
 $stmt2->bind_param('ii', $startY, $curY);
-$stmt2->execute(); $result2 = $stmt2->get_result();
+$stmt2->execute();
+$result2 = $stmt2->get_result();
+/* ─────────────────────────────────── */
 ?>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -90,7 +102,7 @@ $stmt2->execute(); $result2 = $stmt2->get_result();
 <body>
 <h1>전체 수강신청 통계</h1>
 
-<!-- 1. 강의별 통계 -->
+<!-- 강의별 통계 -->
 <h2>1. 강의별 수강신청 통계</h2>
 <h4>(수강신청 인원 수 기준 정렬)</h4>
 
@@ -104,6 +116,7 @@ $stmt2->execute(); $result2 = $stmt2->get_result();
   <?php endif;?>
 </form>
 
+<!-- 강의별 통계 결과 출력 -->
 <table>
  <tr>
    <th>강의명</th><th>교수명</th><th>신청 인원</th>
@@ -139,7 +152,7 @@ $stmt2->execute(); $result2 = $stmt2->get_result();
  <?php endif; ?>
 </div>
 
-<!-- 2. 학번별 통계 -->
+<!-- 학번별 통계 결과 출력-->
 <h2>2. 학번별 수강신청 통계</h2>
 <h4>(최대 최근 7년)</h4>
 <table>
@@ -161,6 +174,8 @@ $stmt2->execute(); $result2 = $stmt2->get_result();
    <?php endwhile; ?>
  <?php endif; ?>
 </table>
+
+
 <a href="/sugang/course/course_main.php">-> 수강신청 홈으로</a>
 </body>
 </html>

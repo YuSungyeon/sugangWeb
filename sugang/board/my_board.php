@@ -1,16 +1,14 @@
 <?php
 session_start();
+// 데이터베이스 연결 설정 & 로그인 상태 확인 & 헤더
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/check_login.php';
+include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
 
-// 로그인 체크
-if (!isset($_SESSION['userID'])) {
-    echo "<script>alert('로그인이 필요합니다.'); location.href='/sugang/user/login.php';</script>";
-    exit;
-}
-
+// 사용자 학번
 $userID = $_SESSION['userID'];
 
-// 내가 작성한 게시글 조회
+// 내가 작성한 게시글 조회 ────────────────────────────────
 $sql = "
   SELECT 게시글.게시글ID, 게시글.제목, 게시글.작성시간, 사용자.이름
     FROM 게시글
@@ -21,8 +19,7 @@ $stmt = $con->prepare($sql);
 $stmt->bind_param("s", $userID);
 $stmt->execute();
 $result = $stmt->get_result();
-
-include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
+/* ──────────────────────────────────────────────── */
 ?>
 
 <h2>내가 쓴 글</h2>
@@ -52,12 +49,13 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
     </tr>
   <?php endwhile; ?>
 
+  <!-- 작성한 게시글이 없으면 해당 내용 출력 -->
   <?php if ($result->num_rows === 0): ?>
     <tr><td colspan="4">작성한 게시글이 없습니다.</td></tr>
   <?php endif; ?>
 </table>
 
-<p><a href="/sugang">← 메인으로 돌아가기</a></p>
+<p><a href="/sugang/user/mypage.php">← 마이페이지로 돌아가기</a></p>
 
 <?php
 include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/footer.php';

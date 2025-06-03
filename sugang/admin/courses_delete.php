@@ -1,4 +1,5 @@
 <?php
+// 데이터베이스 연결 설정 & 관리자 로그인 상태 확인
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/admin/include/admin_check.php';
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
 

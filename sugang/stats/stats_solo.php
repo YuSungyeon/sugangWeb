@@ -1,21 +1,24 @@
 <?php
-/* ── 0. 디버그 ── */
-ini_set('display_errors',1);
-ini_set('display_startup_errors',1);
+/* ─────────── 디버그 출력 ─────────── */
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-mysqli_report(MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT);
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+/* ─────────────────────────────────── */
 
-/* ── 1. 로그인 & DB ── */
 session_start();
-if (!isset($_SESSION['userID'])) { header('Location:/sugang/user/login.php'); exit; }
+
+// 데이터베이스 연결 설정 & 로그인 상태 확인
+require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/check_login.php';
+
+// 사용자 학번
 $userID = $_SESSION['userID'];
 
-require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
-
-/* ── 2. 프로필 & 첫 클릭 시간 ── */
+// 프로필 확인 & 첫 클릭 시간
 $sqlProf = "
  SELECT u.이름,
-        COUNT(*)                                AS total_cnt,
+        COUNT(*) AS total_cnt,
         MIN(CASE WHEN 중요도=1 THEN 시간차이 END)/1000 AS first_click
    FROM 수강신청 s
    JOIN 사용자 u ON s.학번 = u.학번
@@ -26,12 +29,15 @@ $stmt->execute();
 $profile = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
+// 수강신청을 안한 사용자 진행 차단
 if (!$profile || $profile['total_cnt'] == 0) {
     echo "<script>alert('수강 신청 정보가 없습니다.'); history.back();</script>";
     exit;
 }
 
-/* ── 3. 과목별 내 신청 정보 + 강의 최대인원 ── */
+// 과목별 내 신청 정보 + 강의 최대인원
+/* ─────────────────────────────────── */
+// 시간차이(ms)를 초 단위로 변환
 $sqlDtl = "
  SELECT sc.강의코드, k.강의명, k.교수명, k.최대인원,
         sc.중요도,
@@ -45,13 +51,15 @@ $stmt->bind_param('s', $userID);
 $stmt->execute();
 $details = $stmt->get_result();
 $stmt->close();
+/* ─────────────────────────────────── */
 
-/* ── 4. 모든 강의 메타 (신청인원·평균우선순위·공동순위) ── */
+// 모든 강의 정보 (신청인원·평균우선순위·공동순위)
+/* ─────────────────────────────────── */
 $meta = [];
 $res = $con->query("
   SELECT k.강의코드,
-         COUNT(*)                           AS cnt,
-         ROUND(AVG(s.중요도),1)             AS avg_pri
+         COUNT(*) AS cnt,
+         ROUND(AVG(s.중요도),1) AS avg_pri 
     FROM 수강신청 s
     JOIN 강의 k ON s.강의코드=k.강의코드
 GROUP BY k.강의코드
@@ -61,43 +69,66 @@ foreach($res as $r){
     if($prevCnt !== $r['cnt']){ $rank++; $prevCnt = $r['cnt']; }
     $meta[$r['강의코드']] = ['cnt'=>$r['cnt'],'avg'=>$r['avg_pri'],'rank'=>$rank];
 }
+/* ─────────────────────────────────── */
 
-/* ── 5. 과목별 내 속도 등수 (등수만) ── */
-$myRanks = [];
-foreach($details as $row){
-    $code = $row['강의코드'];
-    $myMs = $row['click_diff']*1000;
+// 과목별 내 속도 등수
+/* ─────────────────────────────────── */
+$myRanks = [];  // 각 강의코드별 신청 순위 저장용 배열
+
+foreach ($details as $row) {
+    $code = $row['강의코드']; // 현재 강의코드
+    $myMs = $row['click_diff'] * 1000; // 클릭 시간차(sec)를 ms로 변환
+
+    // 사용자보다 먼저 신청한 사람 수 파악 (사용자의 신청 순위 계산)
     $stmtR = $con->prepare("
-        SELECT COUNT(*)+1
+        SELECT COUNT(*) + 1
           FROM 수강신청
-         WHERE 강의코드=? AND 시간차이 < ?");
-    $stmtR->bind_param('sd', $code, $myMs);
+         WHERE 강의코드 = ? AND 시간차이 < ?
+    ");
+    $stmtR->bind_param('sd', $code, $myMs);   // 강의코드, 사용자 시간차(ms) 바인딩
     $stmtR->execute();
-    $myRanks[$code] = $stmtR->get_result()->fetch_row()[0] ?? '-';
-    $stmtR->close();
-}
-$details->data_seek(0);   /* 커서 재설정 */
 
-/* ── 6. '등급' 테이블로 첫 클릭 등급 구하기 ── */
-$absFirst = abs($profile['first_click'])*1000;           // 초 단위
+    // 결과에서 순위 값 추출하여 순위가 없으면 '-' 처리
+    $myRanks[$code] = $stmtR->get_result()->fetch_row()[0] ?? '-';
+
+    $stmtR->close();  // 자원 해제
+}
+
+//포인터를 다시 처음으로 초기화
+$details->data_seek(0);
+/* ─────────────────────────────────── */
+
+// '등급' 테이블로 첫 클릭 등급 구하기
+/* ─────────────────────────────────── */
+// 사용자의 첫 클릭 시간(first_click)을 초 단위로 가져와서 절댓값 처리 후 ms(밀리초) 단위로 변환
+// 예: -1.234초 → 1234ms (부호에 관계없이 시간 차이 기준으로 등급 판단)
+$absFirst = abs($profile['first_click'])*1000;
+
+// 등급 테이블에서 최소시간 ~ 최대시간 구간에 해당하는 등급을 찾음
 $stmt = $con->prepare("SELECT 등급 FROM 등급 WHERE ? BETWEEN 최소시간 AND 최대시간 LIMIT 1");
 $stmt->bind_param('d', $absFirst);
 $stmt->execute();
+
+// 결과가 단일 행·열이므로 fetch_row()[0]으로 등급 문자열 바로 추출함
 $grade = $stmt->get_result()->fetch_row()[0];
 $stmt->close();
 
-/* ── 7. 전체 평균 첫 클릭 (모든 학생) ── */
-$avgFirst = $con->query("
+// 전체 평균 첫 클릭 (모든 학생)
+/* ─────────────────────────────────── */
+$sql = "
   SELECT ROUND(AVG(abs_first),5) AS avg_abs
     FROM (
           SELECT ABS(MIN(CASE WHEN 중요도=1 THEN 시간차이 END)/1000) AS abs_first
             FROM 수강신청
-        GROUP BY 학번
-         ) tmp")->fetch_assoc()['avg_abs'];
+        GROUP BY 학번) tmp";
 
-/* ── 8. 과목별 평가・속도 메시지 생성 ── */
+$result = $con->query($sql);
+$avgFirst = $result->fetch_assoc()['avg_abs'];
+/* ─────────────────────────────────── */
+
+// 과목별 평가・속도 메시지 생성
+/* ─────────────────────────────────── */
 $courseMsgs = [];
-$hasEarly = false;    // 클릭 시간 음수 존재 여부
 while($row = $details->fetch_assoc()){
     $code     = $row['강의코드'];
     $title    = $row['강의명'].'('.$row['교수명'].')';
@@ -105,7 +136,7 @@ while($row = $details->fetch_assoc()){
     $maxCap   = $row['최대인원'];
     $ratio    = $myRank / $maxCap;
 
-    /* 안전도 문자열 */
+    // 안전도 문자열 (숫자는 임의로 부여함) 
     if ($ratio < 0.6)            $safe = '안전';
     elseif ($ratio < 0.9)        $safe = '평범';
     elseif ($ratio <= 1.0)       $safe = '위험';
@@ -113,13 +144,12 @@ while($row = $details->fetch_assoc()){
 
     $courseMsgs[] = "<strong>'".htmlspecialchars($title)."'</strong> 과목 신청 속도는 <strong>{$safe}</strong>합니다.";
 
-    if ($row['click_diff'] < 0) $hasEarly = true;
-
-    /* 테이블 표시 준비 : 스택에 넣어두기 */
+    // 테이블 표시 준비 : 스택에 넣어두기
     $row['my_rank'] = $myRank;
-    $row['safe']    = $safe;
-    $rows[]         = $row;
+    $row['safe']  = $safe;
+    $rows[] = $row;
 }
+/* ─────────────────────────────────── */
 ?>
 <!DOCTYPE html>
 <html lang="ko"><head>
@@ -183,7 +213,7 @@ if(empty($rows)):?>
 <?php endforeach; ?>
 </ul>
 
-<?php if($hasEarly): ?>
+<?php if($profile['first_click'] < 0): ?>
 <p style="color:red;">신청 시간보다 너무 빠르게 신청하면 위험 할 수 있습니다.</p>
 <?php endif; ?>
 

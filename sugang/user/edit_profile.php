@@ -1,12 +1,5 @@
 <?php
 session_start();
-require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
-
-// 로그인 확인
-if (!isset($_SESSION['userID'])) {
-    echo "<script>alert('로그인이 필요합니다.'); location.href='/sugang/user/login.php';</script>";
-    exit;
-}
 
 // 사용자 학번
 $userID = $_SESSION['userID'];
@@ -36,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // 쿼리 실행
     if ($stmt->execute()) {
-        $_SESSION['name'] = $new_name;
+        $_SESSION['name'] = $new_name; // 변경된 이름 반영
         echo "<script>alert('정보가 수정되었습니다.'); location.href='/sugang/user/mypage.php';</script>";
     } else {
         echo "수정 실패: " . $stmt->error;
@@ -70,13 +63,13 @@ $con->close();
     <h1>회원정보 수정</h1>
 
     <form method="post" action="/sugang/user/edit_profile.php">
-        <label>학번: </label><?php echo htmlspecialchars($userID); ?><br><br>
+        <label>학번: </label><?= htmlspecialchars($userID) ?><br><br>
 
         <label>이름: </label>
-        <input type="text" name="name" value="<?php echo htmlspecialchars($curr_name); ?>" required><br><br>
+        <input type="text" name="name" value="<?= htmlspecialchars($curr_name) ?>" required><br><br>
 
         <label>새 비밀번호: </label>
-        <input type="password" name="password" placeholder="변경하지 않으려면 비워두세요"><br><br>
+        <input type="password" name="password" placeholder="변경하지 않으려면 비워두세요" style="width:200px;"><br><br>
 
         <input type="submit" value="수정하기">
     </form>

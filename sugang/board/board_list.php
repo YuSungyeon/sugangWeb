@@ -1,8 +1,15 @@
 <?php
 session_start();
-require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
 
-// 게시글 + 작성자 + 댓글 수 조인
+// 데이터베이스 연결 설정 & 헤더
+require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
+include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
+
+// ─────────────────────────────────────────────
+// 게시글 목록 조회 (작성자 이름 및 댓글 수 포함)
+// 게시글 테이블 + 사용자 테이블 조인 + 서브쿼리로 댓글 수 계산
+// 상태가 true인 게시글만 출력, 최신순 정렬
+// ─────────────────────────────────────────────
 $sql = "
 SELECT 
     게시글.게시글ID, 
@@ -17,8 +24,6 @@ ORDER BY 게시글.게시글ID DESC
 ";
 
 $result = $con->query($sql);
-
-include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
 ?>
 
 <h2>게시판</h2>
@@ -31,6 +36,7 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
         <th>작성자</th>
         <th>작성일</th>
     </tr>
+    <!-- 게시글이 있을 경우 -->
     <?php while ($row = $result->fetch_assoc()): ?>
     <tr>
         <td><?= htmlspecialchars($row['게시글ID']) ?></td>
@@ -44,7 +50,7 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
         <td><?= htmlspecialchars($row['작성시간']) ?></td>
     </tr>
     <?php endwhile; ?>
-
+    <!-- 게시글이 없는 경우 -->
     <?php if ($result->num_rows === 0): ?>
     <tr>
         <td colspan="5">게시글이 없습니다.</td>
@@ -52,6 +58,7 @@ include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
     <?php endif; ?>
 </table>
 
+<!-- 로그인한 사용자만 글쓰기 가능 -->
 <?php if (isset($_SESSION['userID'])): ?>
     <p><a href="/sugang/board/board_write.php">글쓰기</a></p>
 <?php else: ?>

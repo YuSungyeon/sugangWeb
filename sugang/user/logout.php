@@ -1,5 +1,4 @@
 <?php
-// 세션을 사용하려면 세션 시작이 필요
 session_start();
 
 // 세션에 저장된 모든 데이터 제거
@@ -22,7 +21,7 @@ if (ini_get("session.use_cookies")) {
 // 세션 파괴 (파일 제거)
 session_destroy();
 
-// 로그아웃 후 이동할 페이지 지정 (예: 로그인 페이지로)
-header("Location: /sugang/index.php");
+// 로그아웃 후 초기 화면으로 이동
+header("Location: /sugang");
 exit;
 ?>

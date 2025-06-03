@@ -1,16 +1,22 @@
 <?php
+// 데이터베이스 연결 설정 & 관리자 로그인 상태 확인 & 헤더
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/admin/include/admin_check.php';
 require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
+include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
 
+// 강의 추가 요청 처리
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 데이터 수신 및 정리
     $강의코드 = trim($_POST['강의코드']);
     $강의명 = trim($_POST['강의명']);
     $교수명 = trim($_POST['교수명']);
     $최대인원 = intval($_POST['최대인원']);
 
+    // 필수 항목 검증
     if ($강의코드 === '' || $최대인원 <= 0) {
         $error = "모든 항목을 올바르게 입력해주세요.";
     } else {
+        // 강의 정보 삽입
         $stmt = $con->prepare("INSERT INTO 강의 (강의코드, 강의명, 교수명, 최대인원) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("sssi", $강의코드, $강의명, $교수명, $최대인원);
         $stmt->execute();
@@ -24,10 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 }
-
-include $_SERVER['DOCUMENT_ROOT'].'/sugang/include/header.php';
 ?>
 
+<!-- ───────────── 강의 추가 폼 ───────────── -->
 <h2>강의 추가</h2>
 
 <?php if (isset($error)): ?>
