@@ -60,13 +60,13 @@ if (!$row['상태']) {
 
 <!-- 글 작성자에게만 수정/삭제 버튼 제공 -->
 <p>
-<?php if ($row['학번'] == $_SESSION['userID']): ?>
+<?php if (isset($_SESSION['userID']) && $row['학번'] == $_SESSION['userID']): ?>
     <a href="board_edit.php?id=<?= $id ?>">✏️ 수정</a> |
     <a href="board_delete.php?id=<?= $id ?>" onclick="return confirm('정말 삭제하시겠습니까?');">🗑 삭제</a> 
 <?php endif; ?>
 
 <!-- 관리자에게 삭제/복구 버튼 제공 -->
-<?php if ($_SESSION['is_admin']): ?>
+<?php if (isset($_SESSION['userID']) && $_SESSION['is_admin']): ?>
     <form action="/sugang/admin/board_toggle.php" method="post" style="display:inline;">
         <input type="hidden" name="id" value="<?= $id ?>">
         <button type="submit">
@@ -100,7 +100,7 @@ $comments = $stmt->get_result();
         <button type="submit">댓글 등록</button>
     </form>
 <?php else: ?>
-    <p>댓글을 작성하려면 <a href="/sugang/login.php">로그인</a>이 필요합니다.</p>
+    <p>댓글을 작성하려면 <a href="/sugang/user/login.php">로그인</a>이 필요합니다.</p>
 <?php endif; ?>
 
 <!-- 댓글 목록 출력 -->
@@ -124,13 +124,13 @@ $comments = $stmt->get_result();
                 <?php endif; ?>
 
                 <!-- 본인 댓글이면 수정/삭제 버튼 표시 -->
-                <?php if ($comment['학번'] == $_SESSION['userID'] && (int)$comment['상태'] !== 0): ?>
+                <?php if (isset($_SESSION['userID']) && $comment['학번'] == $_SESSION['userID'] && (int)$comment['상태'] !== 0): ?>
                     <a href="/sugang/comment/edit_comment.php?id=<?= $comment['댓글ID'] ?>&post=<?= $id ?>">✏️ 수정</a> | 
                     <a href="/sugang/comment/delete_comment.php?id=<?= $comment['댓글ID'] ?>&post=<?= $id ?>" onclick="return confirm('정말 삭제하시겠습니까?');">🗑 삭제</a>
                 <?php endif; ?>
 
                 <!-- 관리자 삭제/복구 버튼 -->
-                <?php if ($_SESSION['is_admin']): ?>
+                <?php if (isset($_SESSION['userID']) && $_SESSION['is_admin']): ?>
                     <form action="/sugang/admin/comment_toggle.php" method="post" style="display:inline;">
                         <input type="hidden" name="id" value="<?= $comment['댓글ID'] ?>">
                         <input type="hidden" name="post" value="<?= $id ?>">  <!-- 게시글 ID -->

@@ -1,8 +1,18 @@
 <?php
+/* ─────────── 디버그 출력 ─────────── */
+ini_set('display_errors',1);
+ini_set('display_startup_errors',1);
+error_reporting(E_ALL);
+mysqli_report(MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT);
+/* ─────────────────────────────────── */
 session_start();
+
+require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/db.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/sugang/include/check_login.php';
 
 // 사용자 학번
 $userID = $_SESSION['userID'];
+
 
 // 폼이 제출된 경우
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
